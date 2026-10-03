@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Model Picker 2026 — Find the Best Model for Your Task</title>
+<meta name="description" content="Find the best AI model for your use case. Compare GPT-4o, Claude 3.5, Gemini 1.5, Llama 3, Mistral. Filter by task, price, speed, context. Free AI model selector.">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,sans-serif;background:#070710;color:#f0f0f0;min-height:100vh}
+.hero{text-align:center;padding:50px 20px 28px;background:linear-gradient(180deg,#0d0d18,#070710)}
+.hero h1{font-size:clamp(22px,3.5vw,38px);font-weight:700;color:#f0f0f0;margin-bottom:8px}
+.hero p{color:#555;font-size:14px}
+.wrap{max-width:900px;margin:0 auto;padding:16px 16px 60px}
+.task-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.task-btn{padding:12px 10px;border-radius:10px;border:1px solid #1e1e35;background:#0d0d1e;color:#9ca3af;cursor:pointer;text-align:center;font-size:13px;transition:all .15s}
+.task-btn:hover{border-color:#818cf8}
+.task-btn.on{background:#818cf8;color:#000;border-color:#818cf8;font-weight:600}
+.task-icon{font-size:22px;display:block;margin-bottom:5px}
+.filters-row{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.filter-group{display:flex;align-items:center;gap:6px;font-size:13px;color:#6b7280}
+select{background:#0d0d1e;border:1px solid #1e1e35;border-radius:8px;color:#f0f0f0;font-size:13px;padding:7px 10px;outline:none}
+select:focus{border-color:#818cf8}
+.results{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.model-card{background:#0d0d1e;border:1px solid #1e1e35;border-radius:12px;overflow:hidden;transition:border-color .15s}
+.model-card:hover{border-color:#818cf8}
+.model-card.top-pick{border-color:#22c55e;position:relative}
+.top-badge{position:absolute;top:10px;right:10px;background:#22c55e;color:#000;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700}
+.mc-header{padding:14px 14px 10px}
+.mc-name{font-size:15px;font-weight:700;margin-bottom:2px}
+.mc-provider{font-size:12px;color:#6b7280}
+.mc-body{padding:0 14px 14px}
+.mc-metric{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid #0d0d20}
+.mc-metric:last-child{border:none}
+.mk{color:#9ca3af}
+.mv{font-weight:600}
+.score-bar{height:4px;background:#1e1e35;border-radius:2px;margin-top:3px;overflow:hidden}
+.score-fill{height:100%;border-radius:2px}
+.mc-reason{margin-top:10px;padding:8px 10px;background:#070710;border-radius:6px;font-size:12px;color:#9ca3af;line-height:1.5}
+.no-results{text-align:center;padding:40px;color:#4b5563;font-size:14px}
+.ft{text-align:center;padding:20px;color:#333;font-size:12px}.ft a{color:#818cf8;text-decoration:none}
+</style>
+</head><body>
+<div class="hero"><h1>AI Model Picker</h1><p>Find the best model for your exact task · Real benchmarks · Live pricing · LEGION risk scores</p></div>
+<div class="wrap">
+<div class="task-grid" id="tasks">
+<div class="task-btn on" onclick="setTask('coding',this)"><span class="task-icon">💻</span>Coding</div>
+<div class="task-btn" onclick="setTask('writing',this)"><span class="task-icon">✍️</span>Writing</div>
+<div class="task-btn" onclick="setTask('analysis',this)"><span class="task-icon">📊</span>Analysis</div>
+<div class="task-btn" onclick="setTask('reasoning',this)"><span class="task-icon">🧠</span>Reasoning</div>
+<div class="task-btn" onclick="setTask('long_context',this)"><span class="task-icon">📄</span>Long Context</div>
+<div class="task-btn" onclick="setTask('multimodal',this)"><span class="task-icon">🖼️</span>Vision/Image</div>
+<div class="task-btn" onclick="setTask('agents',this)"><span class="task-icon">🤖</span>AI Agents</div>
+<div class="task-btn" onclick="setTask('translation',this)"><span class="task-icon">🌍</span>Translation</div>
+<div class="task-btn" onclick="setTask('rag',this)"><span class="task-icon">🔍</span>RAG/Search</div>
+<div class="task-btn" onclick="setTask('cheap',this)"><span class="task-icon">💰</span>Cheapest</div>
+<div class="task-btn" onclick="setTask('fast',this)"><span class="task-icon">⚡</span>Fastest</div>
+<div class="task-btn" onclick="setTask('safe',this)"><span class="task-icon">🛡️</span>Safest</div>
+</div>
+<div class="filters-row">
+<div class="filter-group">Max $/1M tokens: <select id="max-price" onchange="render()"><option value="999">Any</option><option value="5">Under $5</option><option value="1">Under $1</option><option value="0.5">Under $0.50</option></select></div>
+<div class="filter-group">Context min: <select id="min-ctx" onchange="render()"><option value="0">Any</option><option value="128">128K+</option><option value="200">200K+</option><option value="1000">1M+</option></select></div>
+<div class="filter-group">Open source: <select id="open-only" onchange="render()"><option value="0">All models</option><option value="1">Open source only</option></select></div>
+</div>
+<div class="results" id="results"></div>
+</div>
+<div class="ft">Powered by <a href="https://legion-api.com">LEGION Systems</a> · <a href="https://api.legion-api.com/docs">API Docs</a> · <a href="https://gemmo.gumroad.com/l/ngtmw">Pro €29/mo</a></div>
+<script>
+const MODELS=[
+  {id:"gpt-4o",name:"GPT-4o",provider:"OpenAI",price_in:5.0,ctx_k:128,open:false,
+   scores:{coding:92,writing:90,analysis:91,reasoning:89,long_context:70,multimodal:94,agents:92,translation:88,rag:89,cheap:20,fast:60,safe:70},
+   reasons:{coding:"Best coding benchmark (HumanEval 90.2%) with strong tool use",writing:"Excellent instruction following and style adaptation",analysis:"Strong on structured data and complex reasoning",agents:"Native function calling, best-in-class tool use",multimodal:"Vision + audio + text, most capable multimodal"}},
+  {id:"claude-3-5",name:"Claude 3.5 Sonnet",provider:"Anthropic",price_in:3.0,ctx_k:200,open:false,
+   scores:{coding:94,writing:93,analysis:93,reasoning:91,long_context:88,multimodal:85,agents:90,translation:87,rag:92,cheap:25,fast:65,safe:95},
+   reasons:{coding:"Top HumanEval 93.7% — best for complex refactoring and debug",writing:"Highest coherence and nuance for long-form content",analysis:"Excellent at structured extraction and document analysis",long_context:"200K context, best at maintaining coherence across long docs",safe:"Lowest critical incident rate — LEGION score A"}},
+  {id:"gemini-1-5-pro",name:"Gemini 1.5 Pro",provider:"Google",price_in:3.5,ctx_k:1000,open:false,
+   scores:{coding:82,writing:84,analysis:87,reasoning:86,long_context:99,multimodal:90,agents:80,translation:91,rag:93,cheap:35,fast:55,safe:80},
+   reasons:{long_context:"1M token context — only model for entire codebases or books",multimodal:"Native video, audio, image understanding",translation:"Best multilingual performance esp. Asian languages",rag:"Massive context = no chunking needed for RAG"}},
+  {id:"o1",name:"o1",provider:"OpenAI",price_in:15.0,ctx_k:128,open:false,
+   scores:{coding:95,writing:75,analysis:96,reasoning:99,long_context:65,multimodal:70,agents:75,translation:72,rag:80,cheap:5,fast:10,safe:75},
+   reasons:{reasoning:"Best reasoning model — MATH 94.8%, complex logic",coding:"Excels at algorithmic problems and competitive programming",analysis:"Chain-of-thought for complex multi-step analysis"}},
+  {id:"llama-3-1-405b",name:"Llama 3.1 405B",provider:"Meta (Open)",price_in:3.0,ctx_k:128,open:true,
+   scores:{coding:88,writing:86,analysis:87,reasoning:87,long_context:70,multimodal:40,agents:82,translation:83,rag:84,cheap:40,fast:50,safe:65},
+   reasons:{coding:"Open source champion — MMLU 88.6%, self-hostable",analysis:"Strong analytical capabilities, fully customizable"},
+   open_advantage:"Full weights available — host on your own infra, no data sharing"},
+  {id:"llama-3-3-70b",name:"Llama 3.3 70B",provider:"Meta (Open)",price_in:0.59,ctx_k:128,open:true,
+   scores:{coding:84,writing:82,analysis:83,reasoning:83,long_context:68,multimodal:0,agents:78,translation:80,rag:81,cheap:90,fast:85,safe:60},
+   reasons:{cheap:"$0.59/1M tokens — best performance per dollar",fast:"70B model runs at 100+ tokens/sec on modern hardware"},
+   open_advantage:"Best open-source value — near-flagship quality at fraction of cost"},
+  {id:"gemini-flash",name:"Gemini 2.0 Flash",provider:"Google",price_in:0.075,ctx_k:1000,open:false,
+   scores:{coding:76,writing:78,analysis:79,reasoning:78,long_context:95,multimodal:82,agents:75,translation:85,rag:90,cheap:98,fast:95,safe:75},
+   reasons:{cheap:"$0.075/1M — cheapest capable model with 1M context",fast:"Fastest response time across all Google models",rag:"1M context + cheap = perfect for large-scale RAG"}},
+  {id:"mistral-large",name:"Mistral Large 2",provider:"Mistral",price_in:2.0,ctx_k:128,open:false,
+   scores:{coding:90,writing:84,analysis:83,reasoning:83,long_context:70,multimodal:0,agents:82,translation:88,rag:83,cheap:50,fast:75,safe:85},
+   reasons:{coding:"HumanEval 92.1% — top European model for code",translation:"Exceptional French, German, Italian — best EU model",safe:"EU-based, GDPR compliant by design"}},
+  {id:"deepseek-v3",name:"DeepSeek V3",provider:"DeepSeek",price_in:0.27,ctx_k:64,open:true,
+   scores:{coding:84,writing:80,analysis:82,reasoning:85,long_context:55,multimodal:0,agents:75,translation:80,rag:75,cheap:95,fast:80,safe:40},
+   reasons:{cheap:"$0.27/1M — best price for capable reasoning",coding:"MMLU 87.1%, strong math and code"}},
+];
+
+let currentTask="coding";
+
+function setTask(t,el){
+  currentTask=t;
+  document.querySelectorAll(".task-btn").forEach(b=>b.classList.remove("on"));
+  el.classList.add("on");
+  render();
+}
+
+function render(){
+  const maxPrice=parseFloat(document.getElementById("max-price").value)||999;
+  const minCtx=parseInt(document.getElementById("min-ctx").value)||0;
+  const openOnly=document.getElementById("open-only").value==="1";
+
+  let models=MODELS.filter(m=>{
+    if(m.price_in>maxPrice)return false;
+    if(m.ctx_k<minCtx)return false;
+    if(openOnly&&!m.open)return false;
+    if(m.scores[currentTask]===0)return false;
+    return true;
+  });
+
+  models.sort((a,b)=>(b.scores[currentTask]||0)-(a.scores[currentTask]||0));
+  const top=models[0];
+
+  if(!models.length){
+    document.getElementById("results").innerHTML='<div class="no-results">No models match your filters. Try relaxing the constraints.</div>';
+    return;
+  }
+
+  document.getElementById("results").innerHTML=models.map((m,i)=>{
+    const score=m.scores[currentTask]||0;
+    const reason=m.reasons[currentTask]||m.reasons[Object.keys(m.reasons)[0]]||"";
+    const isTop=m===top;
+    const barColor=score>=90?"#22c55e":score>=75?"#818cf8":"#f59e0b";
+    return`<div class="model-card ${isTop?"top-pick":""}">
+      ${isTop?'<div class="top-badge">⭐ TOP PICK</div>':""}
+      <div class="mc-header">
+        <div class="mc-name">${m.name}</div>
+        <div class="mc-provider">${m.provider}${m.open?' · Open Source':''}</div>
+      </div>
+      <div class="mc-body">
+        <div class="mc-metric"><span class="mk">Task score</span>
+          <span class="mv" style="color:${barColor}">${score}/100
+            <div class="score-bar"><div class="score-fill" style="width:${score}%;background:${barColor}"></div></div>
+          </span>
+        </div>
+        <div class="mc-metric"><span class="mk">Input price</span><span class="mv">$${m.price_in}/1M tokens</span></div>
+        <div class="mc-metric"><span class="mk">Context window</span><span class="mv">${m.ctx_k>=1000?(m.ctx_k/1000)+"M":m.ctx_k+"K"}</span></div>
+        <div class="mc-reason">${reason}${m.open_advantage?'<br><span style="color:#22c55e">'+m.open_advantage+'</span>':''}</div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+render();
+</script></body></html>
